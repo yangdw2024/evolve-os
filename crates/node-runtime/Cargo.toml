@@ -1,0 +1,29 @@
+[package]
+name = "evolveos-node-runtime"
+description = "Two-stage isolated local execution node for evolve-os: SEARCH/REPLACE patching, hard wall-clock limits, read-only verifier stage."
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lib]
+name = "node_runtime"
+
+[dependencies]
+async-trait.workspace = true
+core-contracts.workspace = true
+hex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tokio.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
