@@ -8,7 +8,9 @@ const path = require("path");
 const https = require("https");
 const { execFileSync } = require("child_process");
 
-const VERSION = require("./package.json").version;
+const pkg = require("./package.json");
+// Release binaries are versioned independently so npm-only fixes don't need a new GitHub release.
+const VERSION = pkg.evolveOsBinaryVersion || pkg.version;
 const REPO = "yangdw2024/evolve-os";
 
 function target() {
@@ -48,6 +50,29 @@ function download(url, dest, redirects = 5) {
   });
 }
 
+function extract(file, dir) {
+  if (process.platform !== "win32") {
+    execFileSync("tar", ["-xzf", file, "-C", dir], { stdio: "inherit" });
+    return;
+  }
+  // A GNU tar from Git/MSYS/conda on PATH misreads `C:\...` as a remote host, so use the
+  // Windows-bundled bsdtar explicitly, falling back to PowerShell Expand-Archive.
+  const sysTar = path.join(process.env.SystemRoot || "C:\\Windows", "System32", "tar.exe");
+  if (fs.existsSync(sysTar)) {
+    try {
+      execFileSync(sysTar, ["-xf", file, "-C", dir], { stdio: "inherit" });
+      return;
+    } catch (_) {
+      /* fall through */
+    }
+  }
+  execFileSync(
+    "powershell.exe",
+    ["-NoProfile", "-NonInteractive", "-Command", `Expand-Archive -LiteralPath '${file}' -DestinationPath '${dir}' -Force`],
+    { stdio: "inherit" }
+  );
+}
+
 async function install() {
   const dest = binPath();
   if (fs.existsSync(dest)) return dest;
@@ -60,8 +85,7 @@ async function install() {
   const file = path.join(tmp, archive);
   process.stderr.write(`evolve-os: downloading ${url}\n`);
   await download(url, file);
-  // `tar` ships with Windows 10+, macOS and Linux and handles both .zip and .tar.gz.
-  execFileSync("tar", ["-xf", file, "-C", tmp], { stdio: "inherit" });
+  extract(file, tmp);
   const exe = path.join(tmp, name, process.platform === "win32" ? "evolve.exe" : "evolve");
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.copyFileSync(exe, dest);

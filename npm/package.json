@@ -28,5 +28,6 @@
   "author": "yangdw2026 <yangdw2021@gmail.com>",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "evolveOsBinaryVersion": "0.1.0"
 }
