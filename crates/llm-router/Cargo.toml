@@ -1,0 +1,30 @@
+[package]
+name = "evolveos-llm-router"
+description = "Budget-guarded tiered (Fast/Strong) OpenAI-compatible LLM client for evolve-os with reserve/settle/release accounting."
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lib]
+name = "llm_router"
+
+[dependencies]
+async-trait.workspace = true
+core-contracts.workspace = true
+hex.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tokio.workspace = true
+toml.workspace = true
+
+[dev-dependencies]
+ledger-sqlite.workspace = true
