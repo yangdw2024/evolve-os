@@ -1,0 +1,21 @@
+[package]
+name = "evolveos-core-contracts"
+description = "Frozen domain contracts for evolve-os: typed errors, integer micro-USD accounting, verifier marks and core traits."
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lib]
+name = "core_contracts"
+
+[dependencies]
+async-trait.workspace = true
+serde.workspace = true
+thiserror.workspace = true

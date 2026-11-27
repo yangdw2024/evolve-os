@@ -1,0 +1,84 @@
+name: Release
+
+# Triggered by a `v*` tag or a `release/vX.Y.Z` branch (the branch form lets API-only
+# clients cut a release; the tag is created by the release step).
+on:
+  push:
+    tags: ["v*"]
+    branches: ["release/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  binaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, ext: "" }
+          - { os: windows-latest, target: x86_64-pc-windows-msvc, ext: ".exe" }
+          - { os: macos-latest, target: aarch64-apple-darwin, ext: "" }
+          - { os: macos-13, target: x86_64-apple-darwin, ext: "" }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Resolve tag
+        shell: bash
+        run: echo "TAG=${GITHUB_REF_NAME#release/}" >> "$GITHUB_ENV"
+      - run: cargo build --release -p evolve-os --bin evolve --target ${{ matrix.target }}
+      - name: Package
+        shell: bash
+        run: |
+          name="evolve-${TAG}-${{ matrix.target }}"
+          mkdir -p "dist/$name"
+          cp "target/${{ matrix.target }}/release/evolve${{ matrix.ext }}" "dist/$name/"
+          cp -r README.md LICENSE llm.toml examples "dist/$name/"
+          cd dist
+          if [ "${{ runner.os }}" = "Windows" ]; then 7z a "$name.zip" "$name" >/dev/null; else tar czf "$name.tar.gz" "$name"; fi
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          files: |
+            dist/*.zip
+            dist/*.tar.gz
+          generate_release_notes: true
+
+  wheels:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          args: --release --out dist
+          manylinux: auto
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: dist/*.whl
+
+  publish-pypi:
+    needs: wheels
+    runs-on: ubuntu-latest
+    if: ${{ vars.PUBLISH_PYPI == 'true' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist
+      - name: Upload (skip versions already published)
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: pipx run twine upload --skip-existing dist/*.whl

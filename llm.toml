@@ -1,0 +1,92 @@
+# evolve-os LLM router config (Mode A, in-process OpenAI-compatible client).
+#
+# SECURITY: never put a plaintext key here. Each tier names the ENV VAR holding the key;
+# an inline `api_key = "..."` field is rejected at load time (deny_unknown_fields).
+#
+#   PowerShell:  $env:EVOLVE_API_KEY = "<your key>"
+#   bash:        export EVOLVE_API_KEY="<your key>"
+#
+# Prices are INTEGER micro-USD per 1M tokens (no floats). They drive the two-phase
+# budget reservation (reserve worst case -> settle actual). For a local proxy that does
+# not bill, keep realistic list prices anyway so the $0.50 hard cap remains meaningful.
+#
+# Missing `usage` in a response: prompt tokens ~= ceil(bytes/3)+16 and completion tokens
+# = max(ceil(content_bytes/3)+16, max_tokens/4) (hidden reasoning tokens are not in the
+# content); the run prints how many responses were billed this way.
+
+# ---------------------------------------------------------------- provider
+[provider]
+id = "antigravity-local"
+display_name = "Antigravity Tools"
+protocol = "openai-chat-completions"   # only protocol implemented in Mode A
+retry_policy = "transient_only"        # retry only 429/5xx/timeout/connect; "none" disables
+max_retries = 2
+
+# ---------------------------------------------------------------- tiers
+# Fast: default exploration tier.
+[fast]
+base_url = "http://127.0.0.1:8045/v1"
+model = "gemini-3.8-flash"
+api_key_env = "EVOLVE_API_KEY"
+input_micro_usd_per_mtok = 300000      # $0.30 / 1M input tokens
+output_micro_usd_per_mtok = 2500000    # $2.50 / 1M output tokens (incl. reasoning)
+timeout_secs = 120
+reasoning_effort = "low"               # label from the model's reasoning_levels
+reasoning_via = "model_suffix"         # this proxy exposes levels as `<model>-<level>` ids
+
+# Strong: stagnation escalation + crossover rounds.
+[strong]
+base_url = "http://127.0.0.1:8045/v1"
+model = "claude-sonnet-5-5"
+api_key_env = "EVOLVE_API_KEY"
+input_micro_usd_per_mtok = 3000000     # $3 / 1M
+output_micro_usd_per_mtok = 15000000   # $15 / 1M
+timeout_secs = 180
+reasoning_effort = "medium"
+reasoning_via = "model_suffix"
+
+# ---------------------------------------------------------------- prompt dedup
+[dedup]
+min_chunk_chars = 40
+# max_prompt_bytes = 60000
+
+# ---------------------------------------------------------------- model catalog
+# Tiers must reference an `id` listed here. max_output_tokens caps each request.
+[[models]]
+id = "claude-opus-5-5"
+display_name = "Claude Opus 5.5"
+context_window = 200000
+max_output_tokens = 64000
+input_types = ["text", "image"]
+reasoning_levels = { low = "low", medium = "medium", high = "high" }
+
+[[models]]
+id = "claude-sonnet-5-5"
+display_name = "Claude Sonnet 5.5"
+context_window = 200000
+max_output_tokens = 64000
+input_types = ["text", "image"]
+reasoning_levels = { low = "low", medium = "medium", high = "high" }
+
+[[models]]
+id = "gemini-3.8-flash"
+display_name = "Gemini 3.8 Flash"
+context_window = 1048576
+max_output_tokens = 131072
+input_types = ["text", "image"]
+reasoning_levels = { low = "low", medium = "medium", high = "high" }
+
+[[models]]
+id = "gemini-4-argon"
+display_name = "Gemini 4 Argon"
+context_window = 1048576
+max_output_tokens = 65536
+input_types = ["text", "image"]
+reasoning_levels = { low = "low", medium = "medium", high = "high" }
+
+[[models]]
+id = "claude-sonnet-4-6"
+display_name = "Claude Sonnet 4.6"
+context_window = 200000
+max_output_tokens = 64000
+input_types = ["text", "image"]

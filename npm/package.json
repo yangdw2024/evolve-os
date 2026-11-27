@@ -1,0 +1,32 @@
+{
+  "name": "evolve-os",
+  "version": "0.1.0",
+  "description": "evolve-os CLI (`evolve`): local self-evolving code loop with budget-guarded LLMs, sandboxed evaluation and holdout-gated rollback. Downloads the prebuilt Rust binary from GitHub Releases.",
+  "bin": {
+    "evolve": "bin/evolve.js"
+  },
+  "files": [
+    "bin/",
+    "install.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "os": ["win32", "linux", "darwin"],
+  "keywords": ["evolutionary", "llm", "map-elites", "alphaevolve", "cli", "rust"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangdw2024/evolve-os.git"
+  },
+  "homepage": "https://github.com/yangdw2024/evolve-os",
+  "license": "MIT",
+  "author": "yangdw2026 <yangdw2021@gmail.com>",
+  "publishConfig": {
+    "access": "public"
+  }
+}

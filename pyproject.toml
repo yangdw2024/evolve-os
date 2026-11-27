@@ -1,0 +1,30 @@
+[build-system]
+requires = ["maturin>=1.5,<2"]
+build-backend = "maturin"
+
+[project]
+name = "evolve-os"
+version = "0.1.0"
+description = "Local self-evolving code loop (Rust): multi-island MAP-Elites search with budget-guarded LLMs, sandboxed evaluation and holdout-gated rollback. Installs the `evolve` CLI."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "yangdw2026", email = "yangdw2021@gmail.com" }]
+requires-python = ">=3.8"
+keywords = ["evolutionary", "llm", "map-elites", "alphaevolve", "sandbox"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Rust",
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://github.com/yangdw2024/evolve-os"
+Repository = "https://github.com/yangdw2024/evolve-os"
+
+[tool.maturin]
+bindings = "bin"
+manifest-path = "crates/evolve-loop/Cargo.toml"
+strip = true

@@ -1,0 +1,11 @@
+/target
+*.db
+*.db-wal
+*.db-shm
+/evolve-work
+__pycache__/
+*.log
+/dist
+/npm/vendor
+/evolve-work*
+/target-*
